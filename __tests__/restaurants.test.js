@@ -83,18 +83,21 @@ describe('restaurant routes', () => {
           Object {
             "detail": "Best restaurant ever!",
             "id": "1",
+            "restaurant_id": "1",
             "stars": 5,
             "user_id": "1",
           },
           Object {
             "detail": "Terrible service :(",
             "id": "2",
+            "restaurant_id": "1",
             "stars": 1,
             "user_id": "2",
           },
           Object {
             "detail": "It was fine.",
             "id": "3",
+            "restaurant_id": "1",
             "stars": 4,
             "user_id": "3",
           },
@@ -105,18 +108,32 @@ describe('restaurant routes', () => {
   });
   it('POST /api/v1/restaurants/:id/reviews should create a new review when logged in', async () => {
     const [agent] = await registerAndLogin();
-    const resp = await agent
+    const res = await agent
       .post('/api/v1/restaurants/1/reviews')
       .send({ detail: 'This is a new review!!!' });
-    expect(resp.status).toBe(200);
-    expect(resp.body).toMatchInlineSnapshot(`
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchInlineSnapshot(`
       Object {
         "detail": "This is a new review!!!",
         "id": "4",
+        "restaurant_id": "1",
         "stars": null,
-        "user_id": null,
+        "user_id": "4",
       }
     `);
+  });
+  it('DELETE /api/v1/reviews/:id should delete a review', async () => {
+    const [agent] = await registerAndLogin();
+    await agent
+      .post('/api/v1/restaurants/4/reviews')
+      .send({ detail: 'this is a new review', stars: 3 });
+    const res = await agent
+      .delete('/api/v1/reviews/4')
+      .send({ message: 'Review was deleted!' });
+    expect(res.status).toBe(200);
+
+    const deleteCheck = await agent.get('/api/v1/reviews/4');
+    expect(deleteCheck.status).toBe(404);
   });
   afterAll(() => {
     pool.end();
